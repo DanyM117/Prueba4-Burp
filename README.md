@@ -42,7 +42,7 @@ kubectl delete namespace burp-ns
 
 Evidencia de los pods, deployments y servicios corriendo en estado `Running` y la consola web de burp
 
-rsc/Server1.png
+![Evidencia 1](rsc/Server1.png)
 
-rsc/Server2.png
+![Evidencia 2](rsc/Server2.png)
 
