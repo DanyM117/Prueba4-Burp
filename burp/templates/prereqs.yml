@@ -1,0 +1,68 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: bsee-pvc
+  namespace: {{ .Release.Namespace }}
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 2Gi
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: burp-db-init
+  namespace: {{ .Release.Namespace }}
+data:
+  init.sql: |
+    CREATE USER burp_enterprise WITH PASSWORD 'ChangeMe123!';
+    CREATE USER burp_agent WITH PASSWORD 'ChangeMe123!';
+    GRANT ALL PRIVILEGES ON DATABASE burp_enterprise TO burp_enterprise;
+    GRANT ALL ON SCHEMA public TO burp_enterprise;
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: burp-db
+  namespace: {{ .Release.Namespace }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: burp-db
+  template:
+    metadata:
+      labels:
+        app: burp-db
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:15
+          ports:
+            - containerPort: 5432
+          env:
+            - name: POSTGRES_DB
+              value: "burp_enterprise"
+            - name: POSTGRES_PASSWORD
+              value: "ChangeMe123!"
+          volumeMounts:
+            - name: init-sql
+              mountPath: /docker-entrypoint-initdb.d
+      volumes:
+        - name: init-sql
+          configMap:
+            name: burp-db-init
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: burp-db
+  namespace: {{ .Release.Namespace }}
+spec:
+  selector:
+    app: burp-db
+  ports:
+    - port: 5432
+      targetPort: 5432

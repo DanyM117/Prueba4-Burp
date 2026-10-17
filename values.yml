@@ -1,0 +1,72 @@
+# Default values for EKS cluster config.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+applicationName: bsee
+# -- Name of the persistent volume claim used for shared storage between the DAST Pods
+persistentVolumeClaim: bsee-pvc
+# -- The container registry used to get the DAST images
+containerRegistry: "public.ecr.aws"
+imagePullSecrets: []
+
+maxCpuPerContainer: 4000m
+minCpuPerContainer: 100m
+defaultCpuPerContainer: 100m
+defaultRequestCpuPerContainer: 100m
+
+maxMemoryPerContainer: 8Gi
+minMemoryPerContainer: 128Mi
+defaultMemoryPerContainer: 128Mi
+defaultRequestMemoryPerContainer: 128Mi
+
+webServerContainerCpu: 1400m
+webServerContainerMemory: 4Gi
+enterpriseServerContainerCpu: 1400m
+enterpriseServerContainerMemory: 4Gi
+scanContainerCpu: 1400m
+scanContainerMemory: 8Gi
+scanControllerCpu: 500m
+scanControllerMemory: 512Mi
+
+services:
+  webServer:
+    installationEnvironment: KUBERNETES
+    label: "app.portswigger.net/ingress: web-server"
+    useHttps: false
+    httpPort: "8080"
+    httpsPort: "8443"
+    httpsCertificateSecret:
+      name: bsee-web-server-https
+      key: certificate
+    httpsPassphraseSecret:
+      name: bsee-web-server-https
+      key: passphrase
+    # -- Annotations added to the web-server Service, e.g. cloud load-balancer annotations
+    annotations: {}
+    # -- Kubernetes Service type for the web-server Service ("ClusterIP", "LoadBalancer" or "NodePort").
+    # Uses the cluster default (ClusterIP) when unset.
+    type: ""
+  enterpriseServer:
+    installationEnvironment: KUBERNETES
+
+database:
+  # -- JDBC connection URL for the database
+  url: "jdbc:postgresql://burp-db:5432/burp_enterprise"
+  # -- Username for the DAST Server database connection
+  enterpriseServerUsername: "burp_enterprise"
+  # -- Connection username for the DAST Server database connection.
+  # Required if connection username differs from internal username e.g. if @hostname suffix is mandated (Azure)
+  enterpriseServerConnectionUsername: "burp_enterprise"
+  # -- Password for the DAST Server database connection
+  enterpriseServerPassword: "ChangeMe123!"
+  # -- Username for the Scanning Resource database connection
+  scanningResourceUsername: "burp_agent"
+  # -- Connection username for the Scanning Resource database connection
+  # Required if connection username differs from internal username e.g. if @hostname suffix is mandated (Azure)
+  scanningResourceConnectionUsername: "burp_agent"
+  # -- Password for the Scanning Resource database connection
+  scanningResourcePassword: "ChangeMe123!"
+  # -- (int) Idle timeout (ms) for the database connection
+  idleTimeout: 60000
+  # -- (int) Maximum lifetime timeout (ms) for the database connection
+  maxLifetimeTimeout: 120000
